@@ -10,7 +10,7 @@ public Plugin myinfo = {
 	name = "VDFtoJSON",
 	author = "Oscar Wos (OSWO)",
 	description = "A plugin which converts Valve Data Format (VDF) files to JSON format.",
-	version = "1.01",
+	version = "1.02",
 	url = "https://github.com/oscar-wos/VDFtoJSON",
 };
 
@@ -25,7 +25,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
-    command = CreateConVar("sm_vdftojson", "1", "Enables the console command sm_vdf2json.", FCVAR_PROTECTED, true, 0.0, true, 1.0);
+    command = CreateConVar("sm_vdftojson_enabled", "1", "Enables the console command sm_vdf2json.", FCVAR_PROTECTED, true, 0.0, true, 1.0);
     RegConsoleCmd("sm_vdf2json", Command_vdftojson, "Converts a VDF file to JSON format.");
     RegConsoleCmd("sm_vdftojson", Command_vdftojson, "Converts a VDF file to JSON format.");
 }
