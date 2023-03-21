@@ -1,5 +1,5 @@
 #pragma newdecls required
-#pragma dynamic 13107299
+#pragma dynamic 16777216
 #include <regex>
 #include <ripext>
 #include <vdftojson>
@@ -10,21 +10,45 @@ public Plugin myinfo = {
 	name = "VDFtoJSON",
 	author = "Oscar Wos (OSWO)",
 	description = "A plugin which converts Valve Data Format (VDF) files to JSON format.",
-	version = "1.00",
+	version = "1.01",
 	url = "https://github.com/oscar-wos/VDFtoJSON",
 };
 
+ConVar command;
+
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-    RegPluginLibrary("VDFtoJSON");
+    RegPluginLibrary("vdftojson");
+    CreateNative("VDFtoJSON", Native_Convert);
     return APLRes_Success;
 }
 
 public void OnPluginStart()
 {
-    VDFReturn c = Convert("../../scripts/items/items_game.txt");
-    PrintToServer("VDFReturn: %d", c);
-    //RegConsoleCmd("vdf2json", Command_VDFtoJSON, "Converts a VDF file to JSON format.");
+    command = CreateConVar("sm_vdftojson", "1", "Enables the console command sm_vdf2json.", FCVAR_PROTECTED, true, 0.0, true, 1.0);
+    RegConsoleCmd("sm_vdf2json", Command_vdftojson, "Converts a VDF file to JSON format.");
+    RegConsoleCmd("sm_vdftojson", Command_vdftojson, "Converts a VDF file to JSON format.");
+}
+
+public Action Command_vdftojson(int client, int args)
+{
+    if (!command.BoolValue) return Plugin_Continue;
+
+    char buffer[PLATFORM_MAX_PATH];
+    GetCmdArgString(buffer, sizeof(buffer));
+    if (strlen(buffer) == 0) FormatEx(buffer, sizeof(buffer), "../../scripts/items/items_game.txt");
+
+    ReplyToCommand(client, "VDFReturn: %d", Convert(buffer));
+    return Plugin_Handled;
+}
+
+int Native_Convert(Handle plugin, int numParams)
+{
+    char path[PLATFORM_MAX_PATH], output[PLATFORM_MAX_PATH];
+    GetNativeString(1, path, sizeof(path));
+    GetNativeString(2, output, sizeof(output));
+
+    return view_as<int>(Convert(path, output));
 }
 
 VDFReturn Convert(const char[] path, const char[] output = "output.json")
@@ -57,7 +81,7 @@ VDFReturn Convert(const char[] path, const char[] output = "output.json")
         f.ReadLine(curr, sizeof(curr));
         TrimString(curr);
 
-        if (strcmp(curr, "") == 0 || strcmp(curr, "/") == 0) continue;
+        if (strlen(curr) == 0 || strcmp(curr, "/") == 0) continue;
 
         if (strcmp(curr, "{") == 0) {
             expect = false;
@@ -69,8 +93,9 @@ VDFReturn Convert(const char[] path, const char[] output = "output.json")
         if (strcmp(curr, "}") == 0) {
             if (stack.Length > 0) {
                 JSONObject c = view_as<JSONObject>(stack.Get(stack.Length - 1));
+                Clean(c);
+
                 stack.Remove(stack.Length - 1);
-                delete c;
             }
 
             continue;
@@ -92,11 +117,15 @@ VDFReturn Convert(const char[] path, const char[] output = "output.json")
                 if (!m.HasKey(key)) {
                     JSONObject n = new JSONObject();
                     m.Set(key, n);
+
+                    delete n;
                 }
 
                 JSONObject p = view_as<JSONObject>(m.Get(key));
                 stack.Push(p);
                 expect = true;
+
+                delete m; delete p;
             } else {
                 char check[4096], check1[4096];
                 r.GetSubString(7, check, sizeof(check));
@@ -113,6 +142,8 @@ VDFReturn Convert(const char[] path, const char[] output = "output.json")
                 JSONObject a = view_as<JSONObject>(stack.Get(stack.Length - 1));
                 a.SetString(key, val);
                 stack.Set(stack.Length - 1, a);
+
+                delete a;
             }
 
             break;
@@ -120,7 +151,22 @@ VDFReturn Convert(const char[] path, const char[] output = "output.json")
     }
 
     obj.ToFile(outputPath);
-    delete f, o, r, obj, stack;
+    delete f; delete o; delete r; delete obj; delete stack;
 
     return VDFReturn_Success;
+}
+
+void Clean(JSONObject obj)
+{
+    char key[4096], val[4096];
+    JSONObjectKeys keys = obj.Keys();
+
+    while (keys.ReadKey(key, sizeof(key))) {
+        if (obj.GetString(key, val, sizeof(val))) continue;
+
+        JSONObject o = view_as<JSONObject>(obj.Get(key));
+        Clean(o);
+    }
+
+    delete keys; delete obj;
 }
