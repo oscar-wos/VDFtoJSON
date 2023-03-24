@@ -31,6 +31,10 @@ VDFReturn c = VDFtoJSON("../../scripts/items/items_game.txt","test.json");
 
 * **Oscar Wos** - *Whole Project* - [AlliedModders](https://forums.alliedmods.net/member.php?u=261698) | [GitHub](https://github.com/OSCAR-WOS)
 
+* **p0358** - *vdf-parser* - [GitHub](https://github.com/p0358)
+
+
+
 ## License
 
 This project is licensed under the GPL V3 License - see the [LICENSE](LICENSE) file for details
