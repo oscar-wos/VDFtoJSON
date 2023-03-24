@@ -18,9 +18,10 @@ Pawn 1.11 - build 6934
 ```c
 #include <vdftojson>
 
-//param1 origin addons/sourcemod/
-//param2 origin addons/sourcemod/data/
-VDFReturn c = VDFtoJSON("../../scripts/items/items_game.txt","test.json");
+//param1 origin    addons/sourcemod/
+//param2 origin    addons/sourcemod/data/
+//param3 encoding  VDFType_8,VDFType_16
+VDFReturn c = VDFtoJSON("../../scripts/items/items_game.txt","test.json", VDFType_8);
 ```
 
 ## Built With
